@@ -22,7 +22,6 @@ CREATE TABLE stadt (
     lon DOUBLE UNSIGNED,
     
     PRIMARY KEY (stadt_nr)
-
 );
 
 CREATE TABLE shoptyp (
@@ -30,7 +29,6 @@ CREATE TABLE shoptyp (
     shoptyp VARCHAR (30),
     
     PRIMARY KEY (typ_nr)
-    
 );
 
 CREATE TABLE shop (
@@ -43,5 +41,4 @@ CREATE TABLE shop (
     PRIMARY KEY (shop_nr),
     FOREIGN KEY (fk_stadt) REFERENCES stadt (stadt_nr),
     FOREIGN KEY (fk_shoptyp) REFERENCES shoptyp (typ_nr)
-
 );
