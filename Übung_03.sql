@@ -16,7 +16,6 @@ ALTER TABLE artikel
 -- Hinzufügen weiterer Tabellen
 
 CREATE TABLE stadt (
-
 	stadt_nr TINYINT UNSIGNED,
     stadt VARCHAR (30),
     lat DOUBLE UNSIGNED,
@@ -27,7 +26,6 @@ CREATE TABLE stadt (
 );
 
 CREATE TABLE shoptyp (
-
 	typ_nr TINYINT UNSIGNED,
     shoptyp VARCHAR (30),
     
@@ -36,7 +34,6 @@ CREATE TABLE shoptyp (
 );
 
 CREATE TABLE shop (
-
 	shop_nr SMALLINT UNSIGNED,
     fk_shoptyp TINYINT UNSIGNED,
     strasse VARCHAR (30),
