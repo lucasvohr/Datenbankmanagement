@@ -1,16 +1,20 @@
 
 -- Übung 02
 
-use bestellungen;
+USE bestellungen;
 
-alter table auftrag 
-	add rabatt double (2,2) default 0.03,
-	add letzter timestamp,
-    modify strasse varchar(35),
-    rename kunde;
+ALTER TABLE auftrag 
+	ADD rabatt DOUBLE (2,2) DEFAULT 0.03,
+	ADD letzter TIMESTAMP;
     
-alter table kunde
-	change letzter letzter_zugriff timestamp;
+ALTER TABLE kunden RENAME kunde;
     
-alter table artikel
-	add key (artikelbezeichnung);
+ALTER TABLE kunde
+	ADD letzter TIMESTAMP;
+
+ALTER TABLE kunde
+    CHANGE letzter letzter_zugriff TIMESTAMP,
+    MODIFY strasse VARCHAR (35);
+    
+ALTER TABLE artikel
+	ADD KEY (artikelbezeichnung);

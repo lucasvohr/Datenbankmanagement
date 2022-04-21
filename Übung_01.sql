@@ -1,65 +1,61 @@
 
 -- Übung 01 --
 
-create database bestellungen;
-use bestellungen;
+DROP DATABASE IF EXISTS bestellungen;
+CREATE DATABASE bestellungen;
+USE bestellungen;
 
-create table kunden(
-	
-    kd_nr smallint unsigned zerofill auto_increment,
-	vorname varchar(30),
-	nachname varchar(30),
-	strasse varchar(25),
-	plz char(5),
-	ort varchar(30),
-	vorwahl varchar(6),
-	telefon varchar(15),
-	geburtsdatum date,
-	ledig bool,
-    key nachvor (nachname, vorname),
-    primary key (kd_nr)
-    
-) engine = innodb;
-
-create table auftrag(
-	
-    auftr_nr int unsigned,
-    bestelldat date,
-    lieferdat date,
-    constraint check_lieferdat check (lieferdat > bestelldat),
-    zahlungsziel date,
-	constraint check_zahlungsziel check (zahlungsziel > lieferdat),
-    zahleingang date,
-    mahnung enum ('0', '1', '2', '3') default '0',
-	primary key (auftr_nr)
-
-) engine = innodb;
-
-create table artikel(
-	
-    art_nr smallint unsigned,
-    artikelbezeichnung varchar(100),
-    einzelpreis double (8,2),
-    constraint check_preis check (einzelpreis >= 10),
-    gewicht double (5,2),
-	primary key(art_nr)
-    
+CREATE TABLE kunden(
+	kd_nr SMALLINT UNSIGNED ZEROFILL AUTO_INCREMENT,
+	vorname VARCHAR (30),
+	nachname VARCHAR (30),
+	strasse VARCHAR (25),
+	plz CHAR (5),
+	ort VARCHAR (30),
+	vorwahl VARCHAR (6),
+	telefon VARCHAR (15),
+	geburtsdatum DATE,
+	ledig BOOL,
+    KEY nachvor (nachname, vorname),
+   
+	PRIMARY KEY (kd_nr)
 );
 
-create table hersteller(
+CREATE TABLE auftrag(
+	auftr_nr INT UNSIGNED,
+    bestelldat DATE,
+    lieferdat DATE,
+    CONSTRAINT check_lieferdat CHECK (lieferdat > bestelldat),
+    zahlungsziel DATE,
+	CONSTRAINT check_zahlungsziel CHECK (zahlungsziel > lieferdat),
+    zahleingang DATE,
+    mahnung ENUM ('0', '1', '2', '3') DEFAULT '0',
 	
-    herst_nr tinyint unsigned primary key, 
-    
-    herstellerbezeichnung varchar(39)
+    PRIMARY KEY (auftr_nr)
+);
 
+create table artikel(
+	art_nr SMALLINT UNSIGNED,
+    artikelbezeichnung VARCHAR (100),
+    einzelpreis DOUBLE (8,2),
+    CONSTRAINT check_preis CHECK (einzelpreis >= 10),
+    gewicht DOUBLE (5,2),
+	
+    PRIMARY KEY (art_nr)
+);
+
+CREATE TABLE hersteller(
+	herst_nr TINYINT UNSIGNED, 
+    herstellerbezeichnung VARCHAR (39),
+    
+    PRIMARY KEY (herst_nr)
 );
 
 create table kategorie(
-	
-    kat_nr tinyint unsigned primary key,
-	
-    kategoriebezeichnung varchar(30)
-
+	kat_nr TINYINT UNSIGNED,
+	kategoriebezeichnung varchar (30),
+    
+    PRIMARY KEY (kat_nr)
 );
 
 
