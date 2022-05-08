@@ -13,6 +13,11 @@ CREATE TABLE bestellposition (
 	CONSTRAINT fk_artikel FOREIGN KEY (fk_artikel)
 		REFERENCES artikel (art_nr)
         ON DELETE CASCADE
+        
+	-- Ein Primärschlüssel auf Anzahl macht keinen Sinn, weil sonst nur ein einziges Mal ein Artikel verkauft werden dürfte
+    -- Weiterhin könnte man über die Verbindung von den Fremdschlüsseln einen Primärschlüssel generieren, allerdings wäre das
+    -- nicht erlaubt, weil dann beim Löschen eines der Schlüssel, bzw. beim Setzen auf NULL die komplette Referenzielle Integrität
+    -- zerstört werden würde.
 );
 
 LOAD DATA INFILE
