@@ -79,7 +79,12 @@ SELECT auftrag.fk_kunde AS "Kundennummer" FROM auftrag
 -- Abfrage 13:
 -- Wie ist der Gesamtumsatz der Kunden nach PLZ-Gebieten (erste Stelle)? Ordnen Sie das Ergebnis aufsteigend nach Gesamtumsatz. 
 -- Beziehen Sie sich in Ihrer Lösung auf die PLZ in der Kundentabelle.
-
+SELECT LEFT(kunde.plz, 1) AS "PLZ-Gebiet", SUM(bestellposition.anzahl * artikel.einzelpreis) AS "Gesamtumsatz" FROM kunde
+	LEFT JOIN auftrag ON auftrag.fk_kunde = kunde.kd_nr
+    LEFT JOIN bestellposition ON bestellposition.fk_auftrag = auftrag.auft_nr
+    LEFT JOIN artikel ON artikel.art_nr = bestellposition.fk_artikel
+		GROUP BY LEFT(kunde.plz, 1)
+			ORDER BY SUM(bestellposition.anzahl * artikel.einzelpreis) DESC;
 
 -- Abfrage 14:
 -- Wie viele Artikel führen wir in den einzelnen Kategorien?
