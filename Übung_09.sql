@@ -25,7 +25,6 @@ SELECT DISTINCT kategorie.kategoriebezeichnung AS "Kategorien" FROM auftrag
 	LEFT JOIN kategorie ON kategorie.kat_nr = artikel.fk_kategorie
 		WHERE auftrag.fk_kunde = 319;
     
-    
 -- Abfrage 5
 -- Zeigen Sie für den Kunden mit der Kundennummer 111 an, wann er welche Artikel bestellt hat.
 SELECT auftrag.fk_kunde AS "Kundennummer", auftrag.auft_nr AS "Auftragsnummer", bestellposition.fk_artikel AS "Artikel", bestellposition.anzahl AS "Bestellmenge", auftrag.bestelldat AS "Bestelldatum" FROM auftrag 
@@ -113,73 +112,116 @@ SELECT auftrag.auft_nr AS "Auftragsnummer" FROM auftrag
 
 -- Abfrage 17:
 -- Wie viele Artikel führen wir insgesamt in den Kategorien ‚Monitor", ‚Festplatte" und ‚Drucker"?
-
+SELECT COUNT(artikel.fk_kategorie) FROM artikel
+	LEFT JOIN kategorie ON kategorie.kat_nr = artikel.fk_kategorie
+		WHERE kategorie.kategoriebezeichnung IN ("Monitor", "Festplatte", "Drucker");
 
 -- Abfrage 18:
 -- Wann hat der Kunde mit der Kundennummer 33 zuletzt bestellt?
-
+SELECT auftrag.bestelldat AS "Datum letzte Bestellung von Kunde 33" FROM kunde
+	LEFT JOIN auftrag ON auftrag.fk_kunde = kunde.kd_nr
+		WHERE kunde.kd_nr = 33
+			ORDER BY auftrag.bestelldat DESC LIMIT 1;
 
 -- Abfrage 19:
 -- Wer sind die 10 ältesten Kunden?
-
+SELECT kunde.kd_nr AS "Kundennummer", kunde.geburtsdatum AS "Geburtsdatum" FROM kunde
+	WHERE kunde.geburtsdatum IS NOT NULL
+		ORDER BY kunde.geburtsdatum ASC LIMIT 10;
 
 -- Abfrage 20:
 -- Wie hoch war der höchste Einzelumsatz einer Position? Die Auftrags-nummer soll ebenfalls angezeigt werden.
-
+SELECT DISTINCT bestellposition.fk_auftrag AS "Auftragsnummer", bestellposition.position AS "Position", (bestellposition.anzahl * artikel.einzelpreis) AS "Umsatz Einzelposition" FROM bestellposition
+	LEFT JOIN artikel ON artikel.art_nr = bestellposition.fk_artikel
+		ORDER BY (bestellposition.anzahl * artikel.einzelpreis) DESC LIMIT 1;
 
 -- Abfrage 21:
 -- Wie viele Kunden haben bei mindestens einem Auftrag noch nicht gezahlt?
-
+SELECT COUNT(DISTINCT auftrag.fk_kunde) AS "Kunden mit mindestens einem unbezahlten Auftrag" FROM auftrag
+	WHERE auftrag.zahleingang IS NULL;
 
 -- Abfrage 22:
 -- In wie vielen Städten haben wir mindestens einen Shop vom Typ "Großhandel"?
-
+SELECT COUNT(DISTINCT shop.fk_stadt) AS "Anzahl Städte mit mindestens einem Shop des Typs 'Großhandel'" FROM shop
+	LEFT JOIN shoptyp ON shoptyp.typ_nr = shop.fk_shoptyp
+		WHERE shoptyp.shoptyp = "Grosshandel";
 
 -- Abfrage 23:
 -- In wie vielen Städten haben wir keinen Shop vom Typ "Großhandel"?
-
+SELECT COUNT(DISTINCT shop.fk_stadt) AS "Anzahl Städte ohne einem Shop des Typs 'Großhandel'" FROM shop
+	LEFT JOIN shoptyp ON shoptyp.typ_nr = shop.fk_shoptyp
+		WHERE shop.fk_stadt NOT IN
+			(SELECT shop.fK_stadt AS "Anzahl Städte mit mindestens einem Shop des Typs 'Großhandel'" FROM shop
+				LEFT JOIN shoptyp ON shoptyp.typ_nr = shop.fk_shoptyp
+					WHERE shoptyp.shoptyp = "Grosshandel");
 
 -- Abfrage 24:
 -- Welcher im Jahr 2020 gelieferte Auftrag hatte den niedrigsten Gesamtwert?
-
+SELECT auftrag.auft_nr, SUM(bestellposition.anzahl * artikel.einzelpreis) FROM auftrag
+	LEFT JOIN bestellposition ON bestellposition.fk_auftrag = auftrag.auft_nr
+    LEFT JOIN artikel ON artikel.art_nr = bestellposition.fk_artikel
+		WHERE bestellposition.anzahl * artikel.einzelpreis IS NOT NULL AND auftrag.bestelldat between "2020-01-01" AND "2020-12-31"
+			GROUP BY auftrag.auft_nr ORDER BY SUM(bestellposition.anzahl * artikel.einzelpreis) ASC LIMIT 1;
 
 -- Abfrage 25:
 -- Zeigen Sie alle Kunden mit Kundennummer, Vornamen und Nachnamen an, die im August 2019 einen Auftrag erteilt haben, der im 
 -- selben Monat geliefert wurde. Jeder Kunde soll nur einmal angezeigt werden.
-
+SELECT DISTINCT auftrag.fk_kunde, kunde.vorname, kunde.nachname FROM auftrag
+	LEFT JOIN kunde ON kunde.kd_nr = auftrag.fk_kunde
+		WHERE auftrag.bestelldat BETWEEN "2019-08-01" AND "2019-08-31" AND auftrag.lieferdat BETWEEN auftrag.bestelldat AND "2019-08-31";
 
 -- Abfrage 26:
 -- Wie hoch ist die durchschnittliche Lieferdauer pro Auftrag im PLZ-Gebiet 4 und wie hoch ist sie im PLZ-Gebiet 8? (PLZ bezogen 
 -- auf die Kundentabelle)
 
 
+
+
+
+
+
+
+
+
 -- Abfrage 27:
 -- Bei welchen Hamburgern und Münchenern wurde im selben Monat geliefert, in dem sie auch bestellt haben? Jeder Kunde soll nur 
 -- einmal betrachtet werden.
-
+SELECT DISTINCT kunde.kd_nr AS "Kundennummer", kunde.vorname AS "Vorname", kunde.nachname AS "Nachname", kunde.ort AS "Wohnort" FROM kunde
+	LEFT JOIN auftrag ON auftrag.fk_kunde = kunde.kd_nr
+		WHERE kunde.ort IN ("Hamburg", "Muenchen") AND MONTH(auftrag.bestelldat) = MONTH(auftrag.lieferdat) AND YEAR(auftrag.bestelldat) = YEAR(auftrag.lieferdat)
+			ORDER BY kunde.ort, kunde.kd_nr ASC;
 
 -- Abfrage 28:
 -- An welchen drei Tagen bezogen auf Tag und Monat wurde in der gesamten Zeit am häufigsten geliefert?
-
+SELECT RIGHT(lieferdat, 5) AS "Liefertag (MM-TT)", COUNT(RIGHT(lieferdat, 5)) AS "Anzahl Lieferungen" FROM auftrag
+	GROUP BY RIGHT(lieferdat, 5)
+		ORDER BY COUNT(RIGHT(lieferdat, 5)) DESC LIMIT 3;
 
 -- Abfrage 29:
 -- Welchen Kunden haben im nächsten Monat Geburtstag?
 -- Die Abfrage soll allgemeingültig sein und sich immer auf das aktuelle Datum beziehen! Die Ausgabe soll sortiert nach der 
 -- Tageszahl erfolgen.
-
+SELECT DAY(kunde.geburtsdatum) AS "Tag", kunde.kd_nr AS "Kundennummer", kunde.vorname AS "Vorname", kunde.nachname AS "Nachname", kunde.geburtsdatum AS "Geburtsdatum" FROM kunde
+	WHERE MONTH(kunde.geburtsdatum) = MONTH(DATE_ADD(CURRENT_DATE(), INTERVAL 1 MONTH))
+		ORDER BY DAY(kunde.geburtsdatum) ASC;
 
 -- Abfrage 30:
 -- Zeigen Sie zu jeder Stadt (Wohnort des Kunden) an, wie viele Kunden keinen Rabatt bekommen.
-
+SELECT kunde.ort AS "Wohnort", COUNT(DISTINCT kunde.kd_nr) AS "Anzahl Kunden ohne Rabatt" FROM kunde
+	WHERE kunde.rabatt = 0
+		GROUP BY kunde.ort;
 
 -- Abfrage 31:
 -- Ermitteln Sie alle Kunden, die innerhalb der nächsten 20 Tage Geburtstag haben. Kunden, die heute Geburtstag haben, sollen 
 -- nicht angezeigt werden.
-
+SELECT * FROM kunde
+	WHERE RIGHT(kunde.geburtsdatum, 5) BETWEEN RIGHT(DATE(DATE_ADD(CURRENT_DATE(), INTERVAL 1 DAY)), 5) AND RIGHT(DATE(DATE_ADD(CURRENT_DATE(), INTERVAL 21 DAY)), 5)
+		ORDER BY RIGHT(kunde.geburtsdatum, 5) ASC;
 
 -- Abfrage 32:
 -- Wie viele Aufträge haben eine Lieferdauer von 10 Tagen?
-
+SELECT COUNT(DISTINCT auftrag.auft_nr) AS "Anzahl Aufträge mit genau 10 Tagen Lieferzeit" FROM auftrag
+	WHERE DATEDIFF(auftrag.lieferdat, auftrag.bestelldat) = 10;
 
 -- Abfrage 33:
 -- Ermitteln Sie die Adressdaten und den Shoptyp des Shops, in dem der höchste Umsatz mit Festplatten erzielt wurde.
