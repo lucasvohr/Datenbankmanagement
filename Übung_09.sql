@@ -83,7 +83,9 @@ SELECT auftrag.fk_kunde AS "Kundennummer" FROM auftrag
 
 -- Abfrage 14:
 -- Wie viele Artikel führen wir in den einzelnen Kategorien?
-
+SELECT kategorie.kat_nr AS "Kategorie", kategorie.kategoriebezeichnung AS "Bezeichnung", COUNT(artikel.art_nr) AS "Anzahl Artikel" FROM kategorie
+	LEFT JOIN artikel ON artikel.FK_kategorie = kategorie.kat_nr
+		GROUP BY kategorie.kat_nr, kategorie.kategoriebezeichnung ORDER BY kategorie.kat_nr ASC;
 
 -- Abfrage 15:
 -- Zeigen Sie alle Kunden mit Kundennummer, Vornamen und Nachnamen an, die irgendwann mehr als 10 Festplatten in einer 
