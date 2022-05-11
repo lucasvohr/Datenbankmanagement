@@ -96,11 +96,20 @@ SELECT kategorie.kat_nr AS "Kategorie", kategorie.kategoriebezeichnung AS "Bezei
 -- Zeigen Sie alle Kunden mit Kundennummer, Vornamen und Nachnamen an, die irgendwann mehr als 10 Festplatten in einer 
 -- Bestellposition geordert haben. Jeder Kunde soll allerdings nur einmal angezeigt werden, selbst wenn er mehrere Bestell-
 -- positionen mit mehr als 10 Festplatten hatte. Die Ausgabe soll nach Kundennummer sortiert sein.
-
+SELECT DISTINCT kunde.kd_nr AS "Kundennummer", kunde.vorname AS "Vorname", kunde.nachname AS "Nachname", SUM(bestellposition.anzahl) AS "Kaufmenge" FROM kunde
+	LEFT JOIN auftrag ON auftrag.fk_kunde = kunde.kd_nr
+    LEFT JOIN bestellposition ON bestellposition.fk_auftrag = auftrag.auft_nr
+    LEFT JOIN artikel ON artikel.art_nr = bestellposition.fk_artikel
+    LEFT JOIN kategorie ON kategorie.kat_nr = artikel.fk_kategorie
+		WHERE kategorie.kategoriebezeichnung = "festplatte" AND bestellposition.anzahl > 10 
+			GROUP BY kunde.kd_nr, kunde.vorname, kunde.nachname
+            ORDER BY kunde.kd_nr ASC;
 
 -- Abfrage 16:
--- Zeigen Sie alle Aufträge an, zu denen es keine Daten in der Bestellposi-tionentabelle gibt.
-
+-- Zeigen Sie alle Aufträge an, zu denen es keine Daten in der Bestellpositionentabelle gibt.
+SELECT auftrag.auft_nr AS "Auftragsnummer" FROM auftrag
+	LEFT JOIN bestellposition ON bestellposition.fk_auftrag = auftrag.auft_nr
+		WHERE bestellposition.position IS NULL;
 
 -- Abfrage 17:
 -- Wie viele Artikel führen wir insgesamt in den Kategorien ‚Monitor", ‚Festplatte" und ‚Drucker"?
