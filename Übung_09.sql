@@ -19,7 +19,7 @@ SELECT * FROM kunde WHERE LEFT(plz, 1) = "4" ORDER BY plz ASC;
 -- Abfrage 4
 -- Zeigen Sie für den Kunden mit der Kundennummer 319 an, von welchen Kategorien er Artikel gekauft hat. 
 -- Jede Kategorie soll nur einmal betrachtet werden.
-SELECT DISTINCT kategorie.kategoriebezeichnung FROM auftrag 
+SELECT DISTINCT kategorie.kategoriebezeichnung AS "Kategorien" FROM auftrag 
 	LEFT JOIN bestellposition ON bestellposition.fk_auftrag = auftrag.auft_nr
 	LEFT JOIN artikel ON artikel.art_nr = bestellposition.fk_artikel
 	LEFT JOIN kategorie ON kategorie.kat_nr = artikel.fk_kategorie
@@ -28,37 +28,53 @@ SELECT DISTINCT kategorie.kategoriebezeichnung FROM auftrag
     
 -- Abfrage 5
 -- Zeigen Sie für den Kunden mit der Kundennummer 111 an, wann er welche Artikel bestellt hat.
-
+SELECT auftrag.fk_kunde AS "Kundennummer", auftrag.auft_nr AS "Auftragsnummer", bestellposition.fk_artikel AS "Artikel", bestellposition.anzahl AS "Bestellmenge", auftrag.bestelldat AS "Bestelldatum" FROM auftrag 
+	LEFT JOIN bestellposition ON bestellposition.fk_auftrag = auftrag.auft_nr
+		WHERE auftrag.fk_kunde = 111 ORDER BY auftrag.bestelldat ASC;
 
 -- Abfrage 6
 -- Wie viele Kunden kommen aus dem PLZ-Gebiet 5?
-
+SELECT COUNT(*) AS "Anzahl Kunden aus dem PLZ-Gebiet 5" FROM kunde WHERE LEFT(plz, 1) = 5;
 
 -- Abfrage 7
 -- Wie viele Kunden haben im August 2020 mindestens einen Auftrag erteilt?
-
+SELECT COUNT(DISTINCT auftrag.fk_kunde) AS "Anzahl Kunden die in '08-2020' gekauft haben" FROM auftrag
+	WHERE (auftrag.bestelldat >= "2020-08-01" AND auftrag.bestelldat <= "2020-08-31");
 
 -- Abfrage 8
 -- Welchen Gesamtumsatz haben wir mit Kunden aus Essen erzielt?
-
+SELECT SUM(artikel.einzelpreis * bestellposition.anzahl) AS "Gesamtumsatz in Essen" FROM kunde
+	LEFT JOIN auftrag ON auftrag.fk_kunde = kunde.kd_nr
+    LEFT JOIN bestellposition ON bestellposition.fk_auftrag = auftrag.auft_nr
+    LEFT JOIN artikel ON artikel.art_nr = bestellposition.fk_artikel
+		WHERE kunde.ort = "essen";
 
 -- Abfrage 9
 -- In welchem Auftrag wurden vom Artikel mit der Artikelnummer 555 stückmäßig am meisten verkauft?
-
+SELECT auftrag.auft_nr AS "Auftragsnummer", MAX(DISTINCT bestellposition.anzahl) AS "Bestellmenge" FROM auftrag
+	LEFT JOIN bestellposition ON bestellposition.fk_auftrag = auftrag.auft_nr
+		WHERE bestellposition.fk_artikel = 555
+			GROUP BY auftrag.auft_nr ORDER BY MAX(DISTINCT bestellposition.anzahl) DESC LIMIT 1;
 
 -- Abfrage 10
 -- In welchen drei PLZ-Gebieten bezogen auf die ersten beiden Stellen der PLZ in der Kundentabelle haben 
 -- wir die meisten Kunden?
-
+SELECT LEFT(kunde.plz, 2) AS "PLZ-Gebiet", COUNT(kunde.kd_nr) AS "Anzahl Kunden" FROM kunde
+	GROUP BY LEFT(kunde.plz, 2) ORDER BY COUNT(kunde.kd_nr) DESC LIMIT 3;
 
 -- Abfrage 11:
 -- Zeigen Sie den jüngsten Kunden an. Sollten mehrere Kunden am selben Tag geboren sein, so sollen alle angezeigt werden.
-
+SELECT kunde.kd_nr AS "Kundennummer", kunde.vorname AS "Vorname", kunde.nachname AS "Nachname", kunde.geburtsdatum AS "Geburtsdatum" from kunde
+    WHERE kunde.geburtsdatum = 
+		(SELECT MAX(kunde.geburtsdatum) FROM kunde);
 
 -- Abfrage 12:
 -- Zeigen Sie alle Kunden an, die am selben Datum bestellt haben, wie der Kunde 400 bei seiner letzten Auftragserteilung. 
 -- Der Kunde 400 selbst soll nicht angezeigt werden.
-
+SELECT auftrag.fk_kunde AS "Kundennummer" FROM auftrag
+	WHERE auftrag.bestelldat IN
+		(SELECT MAX(auftrag.bestelldat) FROM auftrag WHERE auftrag.fk_kunde = 400)
+	ORDER BY auftrag.fk_kunde ASC;
 
 -- Abfrage 13:
 -- Wie ist der Gesamtumsatz der Kunden nach PLZ-Gebieten (erste Stelle)? Ordnen Sie das Ergebnis aufsteigend nach Gesamtumsatz. 
