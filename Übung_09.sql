@@ -225,31 +225,57 @@ SELECT COUNT(DISTINCT auftrag.auft_nr) AS "Anzahl Aufträge mit genau 10 Tagen L
 
 -- Abfrage 33:
 -- Ermitteln Sie die Adressdaten und den Shoptyp des Shops, in dem der höchste Umsatz mit Festplatten erzielt wurde.
-
+	
 
 -- Abfrage 34:
 -- Ermitteln Sie das pro Auftrag anfallende Durchschnittsgewicht nach PLZ-Gebieten der Kunden (erste Stelle). Ordnen Sie das 
 -- Ergebnis aufsteigend nach Durchschnittsgewicht.
-
+SELECT DISTINCT LEFT(kunde.plz, 1) AS "PLZ-Gebiet", SUM(artikel.gewicht * bestellposition.anzahl) / COUNT(DISTINCT auftrag.auft_nr) AS "Durchschnittsgewicht pro Auftrag" FROM kunde
+	LEFT JOIN auftrag ON auftrag.fk_kunde = kunde.kd_nr
+    LEFT JOIN bestellposition ON bestellposition.fk_auftrag = auftrag.auft_nr
+    LEFT JOIN artikel ON artikel.art_nr = bestellposition.fk_artikel
+		GROUP BY LEFT(kunde.plz, 1)
+			ORDER BY (SUM(artikel.gewicht * bestellposition.anzahl) / COUNT(DISTINCT auftrag.auft_nr)) ASC;
 
 -- Abfrage 35:
--- In welchen Orten haben wir im Durchschnitt die kürzesten Lieferzeiten (bezogen auf die Wohnorte der Kunden)? Zeigen Sie die 
--- 5 besten Orte an.
-
+-- In welchen Orten haben wir im Durchschnitt die kürzesten Lieferzeiten (bezogen auf die Wohnorte der Kunden)? Zeigen Sie die 5 besten Orte an.
+SELECT kunde.ort AS "Top 5-Orte mit der kürzesten Lieferzeit" FROM kunde
+	LEFT JOIN auftrag ON auftrag.fk_kunde = kunde.kd_nr
+		GROUP BY kunde.ort
+			ORDER BY SUM(DATEDIFF(auftrag.lieferdat, auftrag.bestelldat)) / COUNT(DISTINCT auftrag.auft_nr) ASC LIMIT 5;
 
 -- Abfrage 36:
--- Ermitteln Sie alle Aufträge im Bereich der Auftragsnummern 8000 bis 9000, bei denen der Rechnungsbetrag (inkl. Rabatt) über 
--- 1.000.000 Euro lag.
-
+-- Ermitteln Sie alle Aufträge im Bereich der Auftragsnummern 8000 bis 9000, bei denen der Rechnungsbetrag (inkl. Rabatt) über 1.000.000 Euro lag.
+SELECT DISTINCT auftrag.auft_nr AS "Auftragsnummer", SUM(bestellposition.anzahl * artikel.einzelpreis * (1 - kunde.rabatt)) AS "Umsatz aus Auftrag (inkl. Rabattierung)" FROM kunde
+	LEFT JOIN auftrag ON auftrag.fk_kunde = kunde.kd_nr
+    LEFT JOIN bestellposition ON bestellposition.fk_auftrag = auftrag.auft_nr
+    LEFT JOIN artikel ON artikel.art_nr = bestellposition.fk_artikel
+		WHERE (auftrag.auft_nr BETWEEN 8000 and 9000)								
+            GROUP BY auftrag.auft_nr
+				HAVING SUM(bestellposition.anzahl * artikel.einzelpreis * (1 - kunde.rabatt)) > 1000000
+					ORDER BY auftrag.auft_nr ASC;
 
 -- Abfrage 37:
 -- Ermitteln Sie alle Artikel, die mehr kosten als der Durchschnittspreis aller Artikel.
-
+SELECT artikel.art_nr FROM artikel
+	WHERE artikel.einzelpreis > 
+    	
+			(SELECT AVG(artikel.einzelpreis) FROM artikel)
+		
+        ORDER BY artikel.art_nr;
 
 -- Abfrage 38:
 -- Ermitteln Sie pro Kategorie, wie viele Artikel mehr kosten als der Durchschnittspreis der Artikel in der jeweiligen Kategorie. 
 -- Die Ausgabe soll nach Kategoriebezeichnung absteigend sortiert erfolgen.
-
+SELECT kategorie.kategoriebezeichnung AS "Kategoriebezeichnung", COUNT(DISTINCT artikel.art_nr) AS "Artikel, teurer als Durchschnitt in jeweiliger Kategorie" FROM kategorie
+	LEFT JOIN artikel ON artikel.fk_kategorie = kategorie.kat_nr
+		WHERE artikel.einzelpreis > 
+        
+			(SELECT AVG(artikel.einzelpreis) FROM kategorie
+				LEFT JOIN artikel ON artikel.fk_kategorie = kategorie.kat_nr)
+			
+            GROUP BY kategorie.kategoriebezeichnung
+				ORDER BY kategorie.kategoriebezeichnung DESC;
 
 -- Abfrage 39:
 -- Ermitteln Sie alle Essener Kunden, die mehr als 3 Mio. € Umsatz gemacht haben.
