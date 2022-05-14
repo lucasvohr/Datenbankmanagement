@@ -1,5 +1,7 @@
+-- INIT
+-- Korrekte Datenbank aktivieren & Vorgriff auf Aufgabe 54
 USE bestellungen;
-
+DROP TEMPORARY TABLE IF EXISTS top5 ;
 
 -- Abfrage 1
 -- Zeigen Sie an, welche Kunden aus München kommen.
@@ -112,7 +114,7 @@ SELECT auftrag.auft_nr AS "Auftragsnummer" FROM auftrag
 
 -- Abfrage 17:
 -- Wie viele Artikel führen wir insgesamt in den Kategorien ‚Monitor", ‚Festplatte" und ‚Drucker"?
-SELECT COUNT(artikel.fk_kategorie) FROM artikel
+SELECT COUNT(artikel.fk_kategorie) AS "Anzahl Artikel" FROM artikel
 	LEFT JOIN kategorie ON kategorie.kat_nr = artikel.fk_kategorie
 		WHERE kategorie.kategoriebezeichnung IN ("Monitor", "Festplatte", "Drucker");
 
@@ -157,7 +159,7 @@ SELECT COUNT(DISTINCT shop.fk_stadt) AS "Anzahl Städte ohne einem Shop des Typs
 
 -- Abfrage 24:
 -- Welcher im Jahr 2020 gelieferte Auftrag hatte den niedrigsten Gesamtwert?
-SELECT auftrag.auft_nr, SUM(bestellposition.anzahl * artikel.einzelpreis) FROM auftrag
+SELECT auftrag.auft_nr AS "Auftragsnummer", SUM(bestellposition.anzahl * artikel.einzelpreis) AS "Gesamtwert" FROM auftrag
 	LEFT JOIN bestellposition ON bestellposition.fk_auftrag = auftrag.auft_nr
     LEFT JOIN artikel ON artikel.art_nr = bestellposition.fk_artikel
 		WHERE bestellposition.anzahl * artikel.einzelpreis IS NOT NULL AND auftrag.bestelldat between "2020-01-01" AND "2020-12-31"
@@ -166,22 +168,17 @@ SELECT auftrag.auft_nr, SUM(bestellposition.anzahl * artikel.einzelpreis) FROM a
 -- Abfrage 25:
 -- Zeigen Sie alle Kunden mit Kundennummer, Vornamen und Nachnamen an, die im August 2019 einen Auftrag erteilt haben, der im 
 -- selben Monat geliefert wurde. Jeder Kunde soll nur einmal angezeigt werden.
-SELECT DISTINCT auftrag.fk_kunde, kunde.vorname, kunde.nachname FROM auftrag
+SELECT DISTINCT auftrag.fk_kunde AS "Kundennummer", kunde.vorname AS "Vorname", kunde.nachname AS "Nachname" FROM auftrag
 	LEFT JOIN kunde ON kunde.kd_nr = auftrag.fk_kunde
 		WHERE auftrag.bestelldat BETWEEN "2019-08-01" AND "2019-08-31" AND auftrag.lieferdat BETWEEN auftrag.bestelldat AND "2019-08-31";
 
 -- Abfrage 26:
--- Wie hoch ist die durchschnittliche Lieferdauer pro Auftrag im PLZ-Gebiet 4 und wie hoch ist sie im PLZ-Gebiet 8? (PLZ bezogen 
--- auf die Kundentabelle)
-
-
-
-
-
-
-
-
-
+-- Wie hoch ist die durchschnittliche Lieferdauer pro Auftrag im PLZ-Gebiet 4 und wie hoch ist sie im PLZ-Gebiet 8? (PLZ bezogen auf die Kundentabelle)
+SELECT LEFT(kunde.plz, 1) AS "PLZ-Gebiet", (SUM(DATEDIFF(auftrag.lieferdat, auftrag.bestelldat))/COUNT(auftrag.auft_nr)) AS "Durchschnittliche Lieferzeit [Tage]" FROM kunde
+	INNER JOIN auftrag ON auftrag.fk_kunde = kunde.kd_nr
+		WHERE LEFT(kunde.plz, 1) = 4 OR LEFT(kunde.plz, 1) = 8
+			GROUP BY LEFT(kunde.plz, 1)
+				ORDER BY LEFT(kunde.plz, 1) ASC;
 
 -- Abfrage 27:
 -- Bei welchen Hamburgern und Münchenern wurde im selben Monat geliefert, in dem sie auch bestellt haben? Jeder Kunde soll nur 
@@ -225,15 +222,24 @@ SELECT COUNT(DISTINCT auftrag.auft_nr) AS "Anzahl Aufträge mit genau 10 Tagen L
 
 -- Abfrage 33:
 -- Ermitteln Sie die Adressdaten und den Shoptyp des Shops, in dem der höchste Umsatz mit Festplatten erzielt wurde.
-	
+SELECT shop.shop_nr AS "Shop-Nummer", shop.strasse AS "Straße", shop.plz AS "PLZ", stadt.stadt AS "Stadt" FROM shop
+	INNER JOIN stadt ON stadt.stadt_nr = shop.fk_stadt
+	INNER JOIN shoptyp ON shoptyp.typ_nr = shop.fk_shoptyp
+    INNER JOIN auftrag ON auftrag.fk_shop = shop.shop_nr
+    INNER JOIN bestellposition ON bestellposition.fk_auftrag = auftrag.auft_nr
+    INNER JOIN artikel ON artikel.art_nr = bestellposition.fk_artikel
+	INNER JOIN kategorie ON kategorie.kat_nr = artikel.fk_kategorie
+		GROUP BY shop.shop_nr, shop.strasse, shop.plz, stadt.stadt, kategorie.kategoriebezeichnung
+			HAVING kategorie.kategoriebezeichnung = "Festplatte"
+				ORDER BY SUM(bestellposition.anzahl * artikel.einzelpreis) DESC LIMIT 1;
 
 -- Abfrage 34:
 -- Ermitteln Sie das pro Auftrag anfallende Durchschnittsgewicht nach PLZ-Gebieten der Kunden (erste Stelle). Ordnen Sie das 
 -- Ergebnis aufsteigend nach Durchschnittsgewicht.
 SELECT DISTINCT LEFT(kunde.plz, 1) AS "PLZ-Gebiet", SUM(artikel.gewicht * bestellposition.anzahl) / COUNT(DISTINCT auftrag.auft_nr) AS "Durchschnittsgewicht pro Auftrag" FROM kunde
-	LEFT JOIN auftrag ON auftrag.fk_kunde = kunde.kd_nr
-    LEFT JOIN bestellposition ON bestellposition.fk_auftrag = auftrag.auft_nr
-    LEFT JOIN artikel ON artikel.art_nr = bestellposition.fk_artikel
+	INNER JOIN auftrag ON auftrag.fk_kunde = kunde.kd_nr
+    INNER JOIN bestellposition ON bestellposition.fk_auftrag = auftrag.auft_nr
+    INNER JOIN artikel ON artikel.art_nr = bestellposition.fk_artikel
 		GROUP BY LEFT(kunde.plz, 1)
 			ORDER BY (SUM(artikel.gewicht * bestellposition.anzahl) / COUNT(DISTINCT auftrag.auft_nr)) ASC;
 
@@ -267,23 +273,34 @@ SELECT artikel.art_nr FROM artikel
 -- Abfrage 38:
 -- Ermitteln Sie pro Kategorie, wie viele Artikel mehr kosten als der Durchschnittspreis der Artikel in der jeweiligen Kategorie. 
 -- Die Ausgabe soll nach Kategoriebezeichnung absteigend sortiert erfolgen.
-SELECT kategorie.kategoriebezeichnung AS "Kategoriebezeichnung", COUNT(DISTINCT artikel.art_nr) AS "Artikel, teurer als Durchschnitt in jeweiliger Kategorie" FROM kategorie
-	LEFT JOIN artikel ON artikel.fk_kategorie = kategorie.kat_nr
-		WHERE artikel.einzelpreis > 
+SELECT kategorie.kategoriebezeichnung AS "Kategoriebezeichnung", COUNT(A.art_nr) AS "Artikel, teurer als Durchschnitt in jeweiliger Kategorie" FROM kategorie
+	INNER JOIN artikel AS A ON A.fk_kategorie = kategorie.kat_nr
+		WHERE A.einzelpreis > 
         
-			(SELECT AVG(artikel.einzelpreis) FROM kategorie
-				LEFT JOIN artikel ON artikel.fk_kategorie = kategorie.kat_nr)
-			
-            GROUP BY kategorie.kategoriebezeichnung
+			(SELECT AVG(artikel.einzelpreis) FROM artikel 
+				WHERE A.fk_kategorie = artikel.fk_kategorie)
+					
+			GROUP BY kategorie.kategoriebezeichnung        
 				ORDER BY kategorie.kategoriebezeichnung DESC;
 
 -- Abfrage 39:
 -- Ermitteln Sie alle Essener Kunden, die mehr als 3 Mio. € Umsatz gemacht haben.
-
+SELECT kunde.kd_nr AS "Kundennummer", kunde.ort, SUM(bestellposition.anzahl * artikel.einzelpreis * (1 - kunde.rabatt)) AS "Kundenumsatz" FROM kunde 
+	INNER JOIN auftrag ON auftrag.fk_kunde = kunde.kd_nr
+    INNER JOIN bestellposition ON bestellposition.fk_auftrag = auftrag.auft_nr
+	INNER JOIN artikel ON artikel.art_nr = bestellposition.fk_artikel
+		WHERE kunde.ort = "Essen"
+			GROUP BY kunde.kd_nr, kunde.ort
+				HAVING (SUM(bestellposition.anzahl * artikel.einzelpreis * (1 - kunde.rabatt))) > 3000000
+					ORDER BY kunde.kd_nr ASC;
 
 -- Abfrage 40:
 -- Welche Kunden haben mehr als 3 Aufträge im Dezember 2019 erteilt?
-
+SELECT kunde.kd_nr AS "Kundennummer", COUNT(DISTINCT auftrag.auft_nr) AS "Anzahl Aufträge" FROM kunde
+	INNER JOIN auftrag ON auftrag.fk_kunde = kunde.kd_nr
+		WHERE auftrag.bestelldat BETWEEN "2019-12-01" AND "2019-12-31"
+			GROUP BY kunde.kd_nr
+				HAVING COUNT(DISTINCT auftrag.auft_nr) > 3;
 
 -- Abfrage 41:
 -- Ermitteln Sie alle inkonsistenten Datensätze aus der Bestellungstabelle in Bezug auf die Auftragstabelle, also Bestellungen, 
@@ -297,17 +314,25 @@ SELECT kategorie.kategoriebezeichnung AS "Kategoriebezeichnung", COUNT(DISTINCT 
 
 -- Abfrage 43:
 -- Welchen Durchschnittsumsatz haben Sie in den Aufträgen 2000 bis 2100 erzielt?
-
+SELECT SUM(bestellposition.anzahl * artikel.einzelpreis) / COUNT(DISTINCT auftrag.auft_nr) AS "Durchschnittsumsatz" FROM auftrag
+	INNER JOIN bestellposition ON bestellposition.fk_auftrag = auftrag.auft_nr
+    INNER JOIN artikel ON artikel.art_nr = bestellposition.fk_artikel
+		WHERE auftrag.auft_nr BETWEEN 2000 AND 2100;
 
 -- Abfrage 44:
 -- Welche Artikel (Artikelnummer, Artikelbezeichnung, Einzelpreis und Anzahl) hatte der Kunde 193 bei seiner letzten Bestellung 
 -- in seinem Warenkorb? Wann hat er die Bestellung aufgegeben und wann wurde geliefert?
-
+SELECT bestellposition.fk_artikel AS "Artikel", artikel.artikelbezeichnung AS "Bezeichnung", artikel.einzelpreis AS "Einzelpreis", bestellposition.anzahl AS "Anzahl" FROM auftrag
+	INNER JOIN bestellposition ON bestellposition.fk_auftrag = auftrag.auft_nr
+    INNER JOIN artikel ON artikel.art_nr = bestellposition.fk_artikel
+		WHERE auftrag.fk_kunde = 193 AND auftrag.bestelldat IN
+			(SELECT MAX(auftrag.bestelldat) FROM auftrag
+				WHERE auftrag.fk_kunde = 193);
 
 -- Abfrage 45: *
 -- Berechnen Sie das aktuelle Alter der Kunden in Jahren. Das Alter in Jahren soll tagesgenau berechnet werden.
 -- Hinweis: Recherchieren Sie eine einfache Lösung, das Alter zu berechnen.
-
+SELECT kunde.kd_nr AS "Kundennummer", kunde.geburtsdatum AS "Geburtsdatum", -LEFT((PERIOD_DIFF(CONCAT(LEFT(kunde.geburtsdatum,4), LEFT(RIGHT(kunde.geburtsdatum,5),2)), CONCAT(LEFT(CURRENT_DATE(),4), LEFT(RIGHT(CURRENT_DATE(),5),2)))/12),3) AS "Alter" FROM kunde;
 
 -- Abfrage 46:
 -- Ermitteln Sie die PLZ-Gebiete (1. Stelle), in denen das Durchschnittsalter der Kunden höher als der Gesamtdurchschnitt ist.
@@ -325,11 +350,24 @@ SELECT kategorie.kategoriebezeichnung AS "Kategoriebezeichnung", COUNT(DISTINCT 
 -- Abfrage 49:
 -- Ermitteln Sie für die Aufträge 8533 bis 8537 die jeweilige Anzahl der Bestellpositionen. Aufträge, die keine Bestellpositionen haben, 
 -- sollen den Wert 0 ausweisen!
-
+SELECT auftrag.auft_nr AS "Auftrag", COUNT(DISTINCT bestellposition.position) AS "Anzahl Positionen" FROM auftrag
+	LEFT JOIN bestellposition ON bestellposition.fk_auftrag = auftrag.auft_nr
+		WHERE auftrag.auft_nr BETWEEN 8533 AND 8537
+			GROUP BY auftrag.auft_nr;
 
 -- Abfrage 50:
--- Wie hoch ist die prozentuale Veränderung der Umsätze im Jahr 2020 im Vergleich zum Jahr 2019? (Nutzen Sie als Datumsfeld bitte das 
--- Lieferdatum.)
+-- Wie hoch ist die prozentuale Veränderung der Umsätze im Jahr 2020 im Vergleich zum Jahr 2019? (Nutzen Sie als Datumsfeld bitte das Lieferdatum.)
+SELECT (
+
+	(SELECT SUM(artikel.einzelpreis * bestellposition.anzahl)FROM auftrag
+		LEFT JOIN bestellposition ON bestellposition.fk_auftrag = auftrag.auft_nr
+		LEFT JOIN artikel ON artikel.art_nr = bestellposition.fk_artikel
+			WHERE LEFT(auftrag.lieferdat, 4) IN (2020))
+            
+            / SUM(artikel.einzelpreis * bestellposition.anzahl)-1)*100 AS "Umsatzänderung 2019 -> 2020 [%]" FROM auftrag
+				LEFT JOIN bestellposition ON bestellposition.fk_auftrag = auftrag.auft_nr
+				LEFT JOIN artikel ON artikel.art_nr = bestellposition.fk_artikel
+				WHERE LEFT(auftrag.lieferdat, 4) IN (2019);
 
 
 -- Abfrage 51:
@@ -347,6 +385,14 @@ SELECT kategorie.kategoriebezeichnung AS "Kategoriebezeichnung", COUNT(DISTINCT 
 
 -- Abfrage 54: *
 -- Mit welchem Auftrag wurde der 5. höchste Umsatz erzielt? Es soll nur dieser eine Auftrag angezeigt werden.
+CREATE TEMPORARY TABLE top5 SELECT auftrag.auft_nr AS "auftragsnummer", SUM((bestellposition.anzahl * artikel.einzelpreis)) AS "umsatz" FROM auftrag
+		INNER JOIN kunde ON kunde.kd_nr = auftrag.fk_kunde
+		INNER JOIN bestellposition ON bestellposition.fk_auftrag = auftrag.auft_nr
+		INNER JOIN artikel ON artikel.art_nr = bestellposition.fk_artikel
+				GROUP BY auftrag.auft_nr
+					ORDER BY SUM((bestellposition.anzahl * artikel.einzelpreis)) DESC LIMIT 5;
+SELECT auftragsnummer FROM top5
+	ORDER BY umsatz LIMIT 1;
 
 
 -- Abfrage 55: *
