@@ -1,10 +1,7 @@
 USE bestellungen;
 
 DELETE FROM artikel
-	WHERE fk_kategorie = 11 
-    OR fk_kategorie = 3 
-    OR fk_kategorie = 10 
-    OR fk_kategorie = 5;
+	WHERE fk_kategorie IN ( 11, 3, 10, 5); 
     
 DELETE FROM kunde
 	WHERE kd_nr = 1;

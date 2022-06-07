@@ -22,7 +22,7 @@ CREATE TABLE kunden(
 );
 
 CREATE TABLE auftrag(
-	auftr_nr INT UNSIGNED,
+	auft_nr INT UNSIGNED,
     bestelldat DATE,
     lieferdat DATE,
     CONSTRAINT check_lieferdat CHECK (lieferdat > bestelldat),
@@ -31,7 +31,7 @@ CREATE TABLE auftrag(
     zahleingang DATE,
     mahnung ENUM ('0', '1', '2', '3') DEFAULT '0',
 	
-    PRIMARY KEY (auftr_nr)
+    PRIMARY KEY (auft_nr)
 );
 
 create table artikel(

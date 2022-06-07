@@ -3,19 +3,14 @@
 
 -- Anpassung der bestehenden Tabellen
 
-ALTER TABLE auftrag 
-	ADD fk_kd_nr SMALLINT UNSIGNED ZEROFILL,
-    ADD FOREIGN KEY (fk_kd_nr) 
-		REFERENCES kunde (kd_nr) 
-        ON UPDATE CASCADE ON DELETE SET NULL;
 
 ALTER TABLE artikel 
-	ADD fk_kat_nr TINYINT (3) UNSIGNED,
-    ADD fk_herst_nr TINYINT UNSIGNED,
-    ADD FOREIGN KEY (fk_kat_nr) 
+	ADD fk_kategorie TINYINT (3) UNSIGNED,
+    ADD fk_hersteller TINYINT UNSIGNED,
+    ADD FOREIGN KEY (fk_kategorie) 
 		REFERENCES kategorie (kat_nr) 
         ON UPDATE CASCADE ON DELETE CASCADE,
-    ADD FOREIGN KEY (fk_herst_nr) 
+    ADD FOREIGN KEY (fk_hersteller) 
 		REFERENCES hersteller (herst_nr) 
 		ON UPDATE CASCADE ON DELETE SET NULL;
 
@@ -52,3 +47,15 @@ CREATE TABLE shop (
 		REFERENCES shoptyp (typ_nr) 
         ON DELETE CASCADE
 );
+
+
+ALTER TABLE auftrag 
+	ADD fk_kunde SMALLINT UNSIGNED ZEROFILL,
+    ADD FOREIGN KEY (fk_kunde) 
+		REFERENCES kunde (kd_nr) 
+        ON UPDATE CASCADE ON DELETE SET NULL,
+	
+    ADD fk_shop SMALLINT UNSIGNED,
+    ADD FOREIGN KEY (fk_shop) 
+		REFERENCES shop (shop_nr) 
+        ON UPDATE CASCADE ON DELETE SET NULL;

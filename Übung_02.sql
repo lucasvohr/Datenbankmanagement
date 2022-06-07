@@ -2,14 +2,11 @@
 -- Übung 02
 
 USE bestellungen;
-
-ALTER TABLE auftrag 
-	ADD rabatt DOUBLE (2,2) DEFAULT 0.03,
-	ADD letzter TIMESTAMP;
     
 ALTER TABLE kunden RENAME kunde;
     
 ALTER TABLE kunde
+	ADD rabatt DOUBLE (2,2) DEFAULT 0.03,
 	ADD letzter TIMESTAMP;
 
 ALTER TABLE kunde
