@@ -195,7 +195,7 @@ SELECT RIGHT(lieferdat, 5) AS "Liefertag (MM-TT)", COUNT(RIGHT(lieferdat, 5)) AS
 		ORDER BY COUNT(RIGHT(lieferdat, 5)) DESC LIMIT 3;
 
 -- Abfrage 29:
--- Welchen Kunden haben im nächsten Monat Geburtstag?
+-- Welche Kunden haben im nächsten Monat Geburtstag?
 -- Die Abfrage soll allgemeingültig sein und sich immer auf das aktuelle Datum beziehen! Die Ausgabe soll sortiert nach der 
 -- Tageszahl erfolgen.
 SELECT DAY(kunde.geburtsdatum) AS "Tag", kunde.kd_nr AS "Kundennummer", kunde.vorname AS "Vorname", kunde.nachname AS "Nachname", kunde.geburtsdatum AS "Geburtsdatum" FROM kunde
@@ -212,7 +212,7 @@ SELECT kunde.ort AS "Wohnort", COUNT(DISTINCT kunde.kd_nr) AS "Anzahl Kunden ohn
 -- Ermitteln Sie alle Kunden, die innerhalb der nächsten 20 Tage Geburtstag haben. Kunden, die heute Geburtstag haben, sollen 
 -- nicht angezeigt werden.
 SELECT * FROM kunde
-	WHERE RIGHT(kunde.geburtsdatum, 5) BETWEEN RIGHT(DATE(DATE_ADD(CURRENT_DATE(), INTERVAL 1 DAY)), 5) AND RIGHT(DATE(DATE_ADD(CURRENT_DATE(), INTERVAL 21 DAY)), 5)
+	WHERE RIGHT(kunde.geburtsdatum, 5) BETWEEN RIGHT(DATE(DATE_ADD(CURRENT_DATE(), INTERVAL 1 DAY)), 5) AND RIGHT(DATE(DATE_ADD(CURRENT_DATE(), INTERVAL 20 DAY)), 5)
 		ORDER BY RIGHT(kunde.geburtsdatum, 5) ASC;
 
 -- Abfrage 32:
