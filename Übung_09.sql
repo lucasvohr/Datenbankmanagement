@@ -305,14 +305,14 @@ SELECT kunde.kd_nr AS "Kundennummer", COUNT(DISTINCT auftrag.auft_nr) AS "Anzahl
 -- Abfrage 41:
 -- Ermitteln Sie alle inkonsistenten Datensätze aus der Bestellungstabelle in Bezug auf die Auftragstabelle, also Bestellungen, 
 -- die einem Auftrag zugeordnet sind, der nicht existiert.
-
+SELECT bestellposition.fk_auftrag FROM bestellposition
+	WHERE bestellposition.fk_auftrag NOT IN 
+		
+        (SELECT auftrag.auft_nr FROM auftrag);
 
 -- Abfrage 42:
 -- Wie hoch ist die Differenz zwischen dem Umsatz im Shop mit der ShopID 15 und dem im Shop mit der ShopID 10? Der Wert soll als 
 -- positive Zahl angezeigt werden.
--- Kommentar: Im ersten Schritt wird in einem Sub-Select die Umsatzsumme für Shop 10 ermittelt und das Ergebnis in die 'oberste' Schleife
--- zurückgegeben, in welcher wiederum der Umsatz des Shops 15 ermittelt wird. Von diesem Umsatz wird dann das Ergebnis des Sub-Selects ab-
--- gezogen. Am Ende wird das Ergebnis in einen Absolut-Wert umgewandelt.
 SELECT ABS(SUM(bestellposition.anzahl * artikel.einzelpreis) - 
 
 	(SELECT SUM(bestellposition.anzahl * artikel.einzelpreis) AS "Umsatz" FROM shop
