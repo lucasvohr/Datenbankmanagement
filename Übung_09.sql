@@ -443,7 +443,14 @@ SELECT * FROM high_low
 -- Abfrage 53: *
 -- Sie vermuten, dass bei der Eingabe Fehler gemacht wurden, so dass manche Kunden doppelt in Ihrem Kundenstamm vorkommen. Suchen Sie alle Datensätze aus 
 -- der Kundentabelle, bei denen der Vorname, der Nachname und der Wohnort übereinstimmen. Handelt es sich hier tatsächlich um ein Duplikat?
-
+SELECT * FROM kunde
+	WHERE kunde.nachname IN 
+		(SELECT kunde.nachname AS "Nachname" FROM kunde	GROUP BY kunde.nachname, kunde.vorname, kunde.ort HAVING COUNT(DISTINCT kunde.kd_nr) > 1) 
+	AND kunde.vorname IN 
+		(SELECT kunde.vorname AS "Vorname" FROM kunde GROUP BY kunde.nachname, kunde.vorname, kunde.ort HAVING COUNT(DISTINCT kunde.kd_nr) > 1)
+	AND kunde.ort IN 
+		(SELECT kunde.ort AS "Ort" FROM kunde GROUP BY kunde.nachname, kunde.vorname, kunde.ort HAVING COUNT(DISTINCT kunde.kd_nr) > 1);
+-- Antwort: Nein, offensichtlich handelt es sich um kein Dublikat: Geburtstage, Telefonnummern und Ehestand sind unterschiedlich, als auch die PLZs.
 
 -- Abfrage 54: *
 -- Mit welchem Auftrag wurde der 5. höchste Umsatz erzielt? Es soll nur dieser eine Auftrag angezeigt werden.
