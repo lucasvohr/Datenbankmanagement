@@ -310,7 +310,26 @@ SELECT kunde.kd_nr AS "Kundennummer", COUNT(DISTINCT auftrag.auft_nr) AS "Anzahl
 -- Abfrage 42:
 -- Wie hoch ist die Differenz zwischen dem Umsatz im Shop mit der ShopID 15 und dem im Shop mit der ShopID 10? Der Wert soll als 
 -- positive Zahl angezeigt werden.
+-- Kommentar: Im ersten Schritt wird in einem Sub-Select die Umsatzsumme für Shop 10 ermittelt und das Ergebnis in die 'oberste' Schleife
+-- zurückgegeben, in welcher wiederum der Umsatz des Shops 15 ermittelt wird. Von diesem Umsatz wird dann das Ergebnis des Sub-Selects ab-
+-- gezogen. Am Ende wird das Ergebnis in einen Absolut-Wert umgewandelt.
+SELECT ABS(SUM(bestellposition.anzahl * artikel.einzelpreis) - 
 
+	(SELECT SUM(bestellposition.anzahl * artikel.einzelpreis) AS "Umsatz" FROM shop
+		INNER JOIN auftrag ON auftrag.fk_shop = shop.shop_nr
+		INNER JOIN bestellposition ON bestellposition.fk_auftrag = auftrag.auft_nr
+		INNER JOIN artikel ON artikel.art_nr = bestellposition.fk_artikel
+			WHERE shop.shop_nr IN (10)
+				GROUP BY shop.shop_nr
+				ORDER BY SUM(bestellposition.anzahl * artikel.einzelpreis) DESC LIMIT 1))
+				
+																	AS "Umsatz" FROM shop
+	INNER JOIN auftrag ON auftrag.fk_shop = shop.shop_nr
+    INNER JOIN bestellposition ON bestellposition.fk_auftrag = auftrag.auft_nr
+    INNER JOIN artikel ON artikel.art_nr = bestellposition.fk_artikel
+		WHERE shop.shop_nr IN (15)
+			GROUP BY shop.shop_nr
+            ORDER BY SUM(bestellposition.anzahl * artikel.einzelpreis) DESC LIMIT 1;
 
 -- Abfrage 43:
 -- Welchen Durchschnittsumsatz haben Sie in den Aufträgen 2000 bis 2100 erzielt?
