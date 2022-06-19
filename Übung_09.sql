@@ -1,7 +1,6 @@
 -- INIT
 -- Korrekte Datenbank aktivieren & Vorgriff auf Aufgabe 54
 USE bestellungen;
-DROP TEMPORARY TABLE IF EXISTS top5 ;
 
 -- Abfrage 1
 -- Zeigen Sie an, welche Kunden aus München kommen.
@@ -405,7 +404,22 @@ SELECT kunde.kd_nr AS "Kundenummer", kunde.vorname AS "Vorname", kunde.nachname 
 
 -- Abfrage 52: *
 -- Zeigen Sie die drei Kunden mit den höchsten und die drei Kunden mit den niedrigsten Gesamtumsätzen - geordnet nach den Gesamtumsätzen absteigend - an.
+DROP TEMPORARY TABLE IF EXISTS high_low;
 
+CREATE TEMPORARY TABLE high_low SELECT auftrag.fk_kunde AS "Kundennummer", SUM(artikel.einzelpreis * bestellposition.anzahl) AS "Umsatz" FROM auftrag
+		INNER JOIN bestellposition ON bestellposition.fk_auftrag = auftrag.auft_nr
+		INNER JOIN artikel ON artikel.art_nr = bestellposition.fk_artikel
+			GROUP BY auftrag.fk_kunde
+			ORDER BY SUM(artikel.einzelpreis * bestellposition.anzahl) ASC LIMIT 3;
+            
+INSERT INTO high_low SELECT auftrag.fk_kunde, SUM(artikel.einzelpreis * bestellposition.anzahl) FROM auftrag
+		INNER JOIN bestellposition ON bestellposition.fk_auftrag = auftrag.auft_nr
+		INNER JOIN artikel ON artikel.art_nr = bestellposition.fk_artikel
+			GROUP BY auftrag.fk_kunde
+			ORDER BY SUM(artikel.einzelpreis * bestellposition.anzahl) DESC LIMIT 3;
+
+SELECT * FROM high_low
+	ORDER BY high_low.Umsatz DESC;	
 
 -- Abfrage 53: *
 -- Sie vermuten, dass bei der Eingabe Fehler gemacht wurden, so dass manche Kunden doppelt in Ihrem Kundenstamm vorkommen. Suchen Sie alle Datensätze aus 
@@ -414,6 +428,7 @@ SELECT kunde.kd_nr AS "Kundenummer", kunde.vorname AS "Vorname", kunde.nachname 
 
 -- Abfrage 54: *
 -- Mit welchem Auftrag wurde der 5. höchste Umsatz erzielt? Es soll nur dieser eine Auftrag angezeigt werden.
+DROP TEMPORARY TABLE IF EXISTS top5 ;
 CREATE TEMPORARY TABLE top5 SELECT auftrag.auft_nr AS "auftragsnummer", SUM((bestellposition.anzahl * artikel.einzelpreis)) AS "umsatz" FROM auftrag
 		INNER JOIN kunde ON kunde.kd_nr = auftrag.fk_kunde
 		INNER JOIN bestellposition ON bestellposition.fk_auftrag = auftrag.auft_nr
