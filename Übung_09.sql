@@ -394,18 +394,22 @@ SELECT (
 				LEFT JOIN artikel ON artikel.art_nr = bestellposition.fk_artikel
 				WHERE LEFT(auftrag.lieferdat, 4) IN (2019);
 
-
 -- Abfrage 51:
 -- Zeigen Sie alle Kunden aus Regensburg mit den von ihnen vergebenen Aufträgen und den in den Aufträgen vorhandenen Bestellpositionen an.
 -- Hinweis: Auch Kunden ohne Aufträge sollen angezeigt werden.
-
+SELECT kunde.kd_nr AS "Kundenummer", kunde.vorname AS "Vorname", kunde.nachname AS "Nachname", auftrag.auft_nr AS "Auftragsnummer", bestellposition.position AS "Bestellposition", bestellposition.fk_artikel AS "Artikel", artikel.artikelbezeichnung AS "Artikelbezeichnung", bestellposition.anzahl AS "Menge" FROM kunde
+	INNER JOIN auftrag ON auftrag.fk_kunde = kunde.kd_nr
+    INNER JOIN bestellposition ON bestellposition.fk_auftrag = auftrag.auft_nr
+    INNER JOIN artikel ON artikel.art_nr = bestellposition.fk_artikel
+		WHERE kunde.ort IN ('Regensburg');
 
 -- Abfrage 52: *
 -- Zeigen Sie die drei Kunden mit den höchsten und die drei Kunden mit den niedrigsten Gesamtumsätzen - geordnet nach den Gesamtumsätzen absteigend - an.
 
 
 -- Abfrage 53: *
--- Sie vermuten, dass bei der Eingabe Fehler gemacht wurden, so dass manche Kunden doppelt in Ihrem Kundenstamm vorkommen. Suchen Sie alle Datensätze aus der Kundentabelle, bei denen der Vorname, der Nachname und der Wohnort übereinstimmen. Handelt es sich hier tatsächlich um ein Duplikat?
+-- Sie vermuten, dass bei der Eingabe Fehler gemacht wurden, so dass manche Kunden doppelt in Ihrem Kundenstamm vorkommen. Suchen Sie alle Datensätze aus 
+-- der Kundentabelle, bei denen der Vorname, der Nachname und der Wohnort übereinstimmen. Handelt es sich hier tatsächlich um ein Duplikat?
 
 
 -- Abfrage 54: *
@@ -419,6 +423,7 @@ CREATE TEMPORARY TABLE top5 SELECT auftrag.auft_nr AS "auftragsnummer", SUM((bes
 SELECT auftragsnummer FROM top5
 	ORDER BY umsatz LIMIT 1;
 
-
 -- Abfrage 55: *
 -- Zeigen Sie alle Kunden an, deren Nachname mit "M", "N" oder "O" beginnt und mit "n", "r" oder "s" endet.
+SELECT kunde.kd_nr AS "Kundennummer", kunde.vorname AS "Vorname", kunde.nachname AS "Nachname" FROM kunde
+	WHERE LEFT(kunde.nachname, 1) IN ('M', 'N', 'O') AND RIGHT(kunde.nachname, 1) IN ('n', 'r', 's');
