@@ -1,5 +1,7 @@
 -- INIT
--- Korrekte Datenbank aktivieren & Vorgriff auf Aufgabe 54
+-- HINWEIS: Das Zeichen * bei den Aufgaben zeigt an, dass der Umweg über eine termporäre Stütztabelle gewählt wurde, da MariaDB in Sub-Selects aktuell keine Limitierung zulässt.
+
+-- Korrekte Datenbank aktivieren
 USE bestellungen;
 
 -- Abfrage 1
@@ -362,14 +364,31 @@ SELECT LEFT(kunde.plz, 1) FROM kunde
 			(SELECT SUM(ABS(DATEDIFF(kunde.geburtsdatum, CURDATE()) DIV 365)) DIV COUNT(kunde.kd_nr) AS "Alter" FROM kunde
 				WHERE kunde.geburtsdatum IS NOT NULL);
 
--- Abfrage 47:
+-- Abfrage 47 *:
 -- Berechnen Sie die Differenz zwischen der maximalen und der minimalen Durchschnitts-Lieferdauer in den PLZ-Gebieten (1. Stelle).
+DROP TEMPORARY TABLE IF EXISTS min_max;
 
+CREATE TEMPORARY TABLE min_max SELECT LEFT(kunde.plz, 1) AS "PLZ-Gebiet", AVG(DATEDIFF(auftrag.lieferdat, auftrag.bestelldat)) AS "Lieferzeit" FROM kunde
+	INNER JOIN auftrag ON auftrag.fk_kunde = kunde.kd_nr
+		GROUP BY LEFT(kunde.plz, 1)
+        ORDER BY AVG(DATEDIFF(auftrag.lieferdat, auftrag.bestelldat)) DESC LIMIT 1;
+        
+INSERT INTO min_max SELECT LEFT(kunde.plz, 1) AS "PLZ-Gebiet", AVG(DATEDIFF(auftrag.lieferdat, auftrag.bestelldat)) AS "Lieferzeit" FROM kunde
+	INNER JOIN auftrag ON auftrag.fk_kunde = kunde.kd_nr
+		GROUP BY LEFT(kunde.plz, 1)
+        ORDER BY AVG(DATEDIFF(auftrag.lieferdat, auftrag.bestelldat)) ASC LIMIT 1;
+        
+SELECT MAX(min_max.Lieferzeit) - MIN(min_max.lieferzeit) AS "Delta MIN/MAX Lieferdauer" FROM min_max;
 
 -- Abfrage 48:
 -- Ermitteln Sie, welches PLZ-Gebiet (1. Stelle, bezogen auf die Shops) die geringste Abweichung von der durchschnittlichen Lieferdauer 
 -- über alle Gebiete aufweist.
-
+SELECT LEFT(shop.plz, 1) AS "PLZ-Gebiet (nach Shop)", ABS(AVG(DATEDIFF(auftrag.lieferdat, auftrag.bestelldat)) - 
+	(SELECT AVG(DATEDIFF(auftrag.lieferdat, auftrag.bestelldat)) FROM auftrag)) AS "geringste Abweichung von durchschnittlicher Lieferdauer"
+FROM shop
+	INNER JOIN auftrag ON auftrag.fk_shop = shop.shop_nr
+		GROUP BY LEFT(shop.plz, 1)
+        ORDER BY ABS(AVG(DATEDIFF(auftrag.lieferdat, auftrag.bestelldat)) - (SELECT AVG(DATEDIFF(auftrag.lieferdat, auftrag.bestelldat)) FROM auftrag)) LIMIT 1;
 
 -- Abfrage 49:
 -- Ermitteln Sie für die Aufträge 8533 bis 8537 die jeweilige Anzahl der Bestellpositionen. Aufträge, die keine Bestellpositionen haben, 
