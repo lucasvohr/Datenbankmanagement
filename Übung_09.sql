@@ -355,7 +355,13 @@ SELECT kunde.kd_nr AS "Kundennummer", kunde.geburtsdatum AS "Geburtsdatum", -LEF
 
 -- Abfrage 46:
 -- Ermitteln Sie die PLZ-Gebiete (1. Stelle), in denen das Durchschnittsalter der Kunden höher als der Gesamtdurchschnitt ist.
-
+SELECT LEFT(kunde.plz, 1) FROM kunde
+	WHERE kunde.geburtsdatum IS NOT NULL
+		GROUP BY LEFT(kunde.plz, 1)
+		HAVING SUM(ABS(DATEDIFF(kunde.geburtsdatum, CURDATE()) DIV 365)) DIV COUNT(kunde.kd_nr) > 
+        
+			(SELECT SUM(ABS(DATEDIFF(kunde.geburtsdatum, CURDATE()) DIV 365)) DIV COUNT(kunde.kd_nr) AS "Alter" FROM kunde
+				WHERE kunde.geburtsdatum IS NOT NULL);
 
 -- Abfrage 47:
 -- Berechnen Sie die Differenz zwischen der maximalen und der minimalen Durchschnitts-Lieferdauer in den PLZ-Gebieten (1. Stelle).
